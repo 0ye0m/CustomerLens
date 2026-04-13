@@ -188,6 +188,8 @@ def tab_upload() -> None:
             st.session_state["user_data"] = enriched
             st.session_state["data_source"] = "uploaded"
             st.session_state["upload_loaded"] = True
+            st.session_state["manual_loaded"] = False
+            st.session_state["demo_loaded"] = False
             st.success(
                 "Your data is loaded. All analysis pages are now using your data."
             )
@@ -289,6 +291,8 @@ def tab_manual_entry() -> None:
         st.session_state["user_data"] = enriched
         st.session_state["data_source"] = "uploaded"
         st.session_state["manual_loaded"] = True
+        st.session_state["upload_loaded"] = False
+        st.session_state["demo_loaded"] = False
         st.success("Your customers are loaded. All analysis pages are now using your data.")
 
     if st.session_state.get("manual_loaded"):
@@ -328,6 +332,8 @@ def _demo_card(title: str, subtitle: str, button_label: str) -> None:
 
         st.session_state["user_data"] = demo_df
         st.session_state["demo_loaded"] = True
+        st.session_state["upload_loaded"] = False
+        st.session_state["manual_loaded"] = False
         st.success("Demo data loaded. You can start exploring now.")
 
 

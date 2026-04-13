@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+scikit-learn
+plotly
+scipy
+fpdf2
+matplotlib
+seaborn
+faker
+groq

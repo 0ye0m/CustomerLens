@@ -342,6 +342,9 @@ def render_data_source_banner() -> None:
             "demo_ecommerce": "E-commerce",
             "demo_saas": "SaaS",
             "demo_retail": "Retail",
+            "demo_marketplace": "Marketplace",
+            "demo_d2c": "D2C",
+            "demo_hospitality": "Hospitality",
         }.get(source, source.replace("demo_", "").replace("_", " ").title())
         st.info(f"Using demo dataset: {label}")
     else:
@@ -360,6 +363,9 @@ def render_data_source_widget() -> None:
             "demo_ecommerce": "Demo: E-commerce",
             "demo_saas": "Demo: SaaS",
             "demo_retail": "Demo: Retail",
+            "demo_marketplace": "Demo: Marketplace",
+            "demo_d2c": "Demo: D2C",
+            "demo_hospitality": "Demo: Hospitality",
         }.get(source, source.replace("demo_", "Demo: ").title())
         st.sidebar.markdown("<span style='color: #2ecc71;'>Active</span>", unsafe_allow_html=True)
         st.sidebar.caption(f"{count:,} customers loaded")
@@ -458,6 +464,94 @@ def _demo_retail() -> pd.DataFrame:
     return df
 
 
+def _demo_marketplace() -> pd.DataFrame:
+    """Generate a marketplace demo dataset."""
+    rng = np.random.default_rng(48)
+    n_customers = 4000
+    df = _base_demo_frame(n_customers, seed=48)
+    df["total_orders"] = rng.poisson(lam=5.0, size=n_customers).clip(1, None)
+    df["total_spend"] = rng.lognormal(mean=3.1, sigma=0.7, size=n_customers) * 140
+    df["country"] = rng.choice(["United States", "United Kingdom", "Germany", "India"], size=n_customers)
+    df["city"] = rng.choice(["New York", "London", "Berlin", "Mumbai", "Austin"], size=n_customers)
+    df["gender"] = rng.choice(["Female", "Male", "Non-binary"], size=n_customers, p=[0.48, 0.48, 0.04])
+    df["channel"] = rng.choice(["web", "mobile"], size=n_customers, p=[0.55, 0.45])
+    df["product_category_preference"] = rng.choice(
+        ["Electronics", "Fashion", "Home", "Beauty"], size=n_customers
+    )
+    df["payment_method"] = rng.choice(
+        ["card", "paypal", "wallet", "bank_transfer"], size=n_customers, p=[0.55, 0.2, 0.15, 0.1]
+    )
+    df["discount_sensitivity"] = rng.choice(["low", "med", "high"], size=n_customers, p=[0.4, 0.4, 0.2])
+    df["satisfaction_score"] = np.clip(rng.normal(7.1, 1.3, size=n_customers), 1, 10)
+    df["churn_flag"] = (rng.random(n_customers) < 0.22).astype(int)
+    df["loyalty_points"] = (df["total_spend"] * 0.06 + df["total_orders"] * 6).astype(int)
+    df["support_tickets_raised"] = rng.poisson(0.7, size=n_customers)
+    df["referral_count"] = rng.poisson(0.6, size=n_customers)
+    df["avg_order_value"] = df["total_spend"] / df["total_orders"]
+    df["signup_date"] = df["last_purchase_date"] - pd.to_timedelta(
+        rng.integers(30, 1100, size=n_customers), unit="D"
+    )
+    return df
+
+
+def _demo_d2c() -> pd.DataFrame:
+    """Generate a direct-to-consumer brand demo dataset."""
+    rng = np.random.default_rng(60)
+    n_customers = 2500
+    df = _base_demo_frame(n_customers, seed=60)
+    df["total_orders"] = rng.poisson(lam=3.2, size=n_customers).clip(1, None)
+    df["total_spend"] = rng.lognormal(mean=2.9, sigma=0.45, size=n_customers) * 90
+    df["country"] = rng.choice(["United States", "Canada", "Australia"], size=n_customers)
+    df["city"] = rng.choice(["Los Angeles", "Toronto", "Sydney", "Seattle"], size=n_customers)
+    df["gender"] = rng.choice(["Female", "Male", "Non-binary"], size=n_customers, p=[0.55, 0.4, 0.05])
+    df["channel"] = rng.choice(["web", "mobile"], size=n_customers, p=[0.35, 0.65])
+    df["product_category_preference"] = rng.choice(
+        ["Beauty", "Fashion", "Wellness"], size=n_customers, p=[0.4, 0.35, 0.25]
+    )
+    df["payment_method"] = rng.choice(["card", "paypal", "wallet"], size=n_customers, p=[0.6, 0.2, 0.2])
+    df["discount_sensitivity"] = rng.choice(["low", "med", "high"], size=n_customers, p=[0.45, 0.4, 0.15])
+    df["satisfaction_score"] = np.clip(rng.normal(7.8, 1.0, size=n_customers), 1, 10)
+    df["churn_flag"] = (rng.random(n_customers) < 0.12).astype(int)
+    df["loyalty_points"] = (df["total_spend"] * 0.07 + df["total_orders"] * 10).astype(int)
+    df["support_tickets_raised"] = rng.poisson(0.5, size=n_customers)
+    df["referral_count"] = rng.poisson(1.0, size=n_customers)
+    df["avg_order_value"] = df["total_spend"] / df["total_orders"]
+    df["signup_date"] = df["last_purchase_date"] - pd.to_timedelta(
+        rng.integers(20, 900, size=n_customers), unit="D"
+    )
+    return df
+
+
+def _demo_hospitality() -> pd.DataFrame:
+    """Generate a hospitality and travel demo dataset."""
+    rng = np.random.default_rng(72)
+    n_customers = 1800
+    df = _base_demo_frame(n_customers, seed=72)
+    df["total_orders"] = rng.poisson(lam=1.8, size=n_customers).clip(1, None)
+    df["total_spend"] = rng.lognormal(mean=3.6, sigma=0.5, size=n_customers) * 220
+    df["country"] = rng.choice(["United States", "France", "Italy", "Japan"], size=n_customers)
+    df["city"] = rng.choice(["Paris", "Tokyo", "Rome", "New York", "Osaka"], size=n_customers)
+    df["gender"] = rng.choice(["Female", "Male", "Non-binary"], size=n_customers, p=[0.5, 0.45, 0.05])
+    df["channel"] = rng.choice(["web", "mobile", "store"], size=n_customers, p=[0.5, 0.35, 0.15])
+    df["product_category_preference"] = rng.choice(
+        ["Experiences", "Lodging", "Transport"], size=n_customers, p=[0.35, 0.4, 0.25]
+    )
+    df["payment_method"] = rng.choice(
+        ["card", "wallet", "bank_transfer"], size=n_customers, p=[0.7, 0.2, 0.1]
+    )
+    df["discount_sensitivity"] = rng.choice(["low", "med", "high"], size=n_customers, p=[0.5, 0.35, 0.15])
+    df["satisfaction_score"] = np.clip(rng.normal(7.0, 1.5, size=n_customers), 1, 10)
+    df["churn_flag"] = (rng.random(n_customers) < 0.28).astype(int)
+    df["loyalty_points"] = (df["total_spend"] * 0.04 + df["total_orders"] * 12).astype(int)
+    df["support_tickets_raised"] = rng.poisson(0.9, size=n_customers)
+    df["referral_count"] = rng.poisson(0.4, size=n_customers)
+    df["avg_order_value"] = df["total_spend"] / df["total_orders"]
+    df["signup_date"] = df["last_purchase_date"] - pd.to_timedelta(
+        rng.integers(60, 1400, size=n_customers), unit="D"
+    )
+    return df
+
+
 def build_demo_dataset(kind: str) -> pd.DataFrame:
     """Create a demo dataset based on the selected scenario."""
     kind_lower = kind.lower()
@@ -467,6 +561,12 @@ def build_demo_dataset(kind: str) -> pd.DataFrame:
         df = _demo_saas()
     elif kind_lower == "retail":
         df = _demo_retail()
+    elif kind_lower == "marketplace":
+        df = _demo_marketplace()
+    elif kind_lower == "d2c":
+        df = _demo_d2c()
+    elif kind_lower == "hospitality":
+        df = _demo_hospitality()
     else:
         df = _demo_ecommerce()
     return enrich_dataframe(df)

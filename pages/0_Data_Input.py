@@ -326,6 +326,15 @@ def _demo_card(title: str, subtitle: str, button_label: str) -> None:
         elif "SaaS" in title:
             demo_df = build_demo_dataset("saas")
             st.session_state["data_source"] = "demo_saas"
+        elif "Marketplace" in title:
+            demo_df = build_demo_dataset("marketplace")
+            st.session_state["data_source"] = "demo_marketplace"
+        elif "D2C" in title:
+            demo_df = build_demo_dataset("d2c")
+            st.session_state["data_source"] = "demo_d2c"
+        elif "Hospitality" in title:
+            demo_df = build_demo_dataset("hospitality")
+            st.session_state["data_source"] = "demo_hospitality"
         else:
             demo_df = build_demo_dataset("retail")
             st.session_state["data_source"] = "demo_retail"
@@ -360,6 +369,26 @@ def tab_demo_data() -> None:
             "Retail chain",
             "3,000 customers, in-store + online, loyalty program, regional spread.",
             "Load Retail Demo",
+        )
+
+    col4, col5, col6 = st.columns(3)
+    with col4:
+        _demo_card(
+            "Marketplace",
+            "4,000 customers, multi-category marketplace, mixed loyalty levels.",
+            "Load Marketplace Demo",
+        )
+    with col5:
+        _demo_card(
+            "D2C brand",
+            "2,500 customers, high repeat cadence, strong loyalty points usage.",
+            "Load D2C Demo",
+        )
+    with col6:
+        _demo_card(
+            "Hospitality",
+            "1,800 customers, seasonal travel spend, higher AOV per booking.",
+            "Load Hospitality Demo",
         )
 
     if st.session_state.get("demo_loaded"):

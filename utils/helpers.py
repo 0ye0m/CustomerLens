@@ -276,4 +276,7 @@ def generate_strategy_pdf(
             ln=True,
         )
 
-    return pdf.output(dest="S").encode("latin-1")
+    output = pdf.output(dest="S")
+    if isinstance(output, (bytes, bytearray)):
+        return bytes(output)
+    return str(output).encode("latin-1", errors="ignore")

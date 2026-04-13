@@ -195,7 +195,7 @@ def tab_upload() -> None:
             )
 
         if st.session_state.get("upload_loaded"):
-            if st.button("Go to Overview"):
+            if st.button("Go to Overview", key="go_overview_upload"):
                 st.switch_page("pages/1_Overview.py")
 
 
@@ -296,7 +296,7 @@ def tab_manual_entry() -> None:
         st.success("Your customers are loaded. All analysis pages are now using your data.")
 
     if st.session_state.get("manual_loaded"):
-        if st.button("Go to Overview"):
+        if st.button("Go to Overview", key="go_overview_manual"):
             st.switch_page("pages/1_Overview.py")
 
     st.download_button(

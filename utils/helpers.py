@@ -117,6 +117,10 @@ def sidebar_filters(df: pd.DataFrame, cluster_options: Iterable[int] | None = No
     date_col = "signup_date" if "signup_date" in df.columns else "last_purchase_date"
     min_date = df[date_col].min()
     max_date = df[date_col].max()
+    if pd.isna(min_date) or pd.isna(max_date):
+        today = pd.Timestamp.today().normalize()
+        min_date = today - pd.to_timedelta(365, unit="D")
+        max_date = today
     date_label = "Signup date range" if date_col == "signup_date" else "Purchase date range"
     date_range = st.sidebar.date_input(
         date_label,
@@ -164,9 +168,10 @@ def apply_filters(df: pd.DataFrame, filters: FilterState) -> pd.DataFrame:
     """Filter the dataset based on sidebar selections."""
     filtered = df.copy()
     date_col = "signup_date" if "signup_date" in filtered.columns else "last_purchase_date"
-    filtered = filtered[
-        (filtered[date_col] >= filters.date_range[0]) & (filtered[date_col] <= filters.date_range[1])
-    ]
+    if date_col in filtered.columns:
+        filtered = filtered[
+            (filtered[date_col] >= filters.date_range[0]) & (filtered[date_col] <= filters.date_range[1])
+        ]
 
     if filters.countries and "country" in filtered.columns:
         filtered = filtered[filtered["country"].isin(filters.countries)]

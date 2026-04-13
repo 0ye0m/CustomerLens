@@ -28,6 +28,7 @@ OPTIONAL_COLUMNS = [
     "channel",
     "loyalty_points",
     "support_tickets_raised",
+    "referral_count",
 ]
 
 STANDARD_COLUMNS = REQUIRED_COLUMNS + OPTIONAL_COLUMNS
@@ -43,6 +44,7 @@ DEFAULT_VALUES = {
     "channel": "web",
     "loyalty_points": 0,
     "support_tickets_raised": 0,
+    "referral_count": 0,
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -251,15 +253,32 @@ def enrich_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     if "total_spend" in data.columns:
         data["total_spend"] = _clean_currency(data["total_spend"])
+    if "avg_order_value" in data.columns:
+        data["avg_order_value"] = _clean_currency(data["avg_order_value"])
 
     if "total_orders" in data.columns:
         data["total_orders"] = pd.to_numeric(data["total_orders"], errors="coerce")
+
+    for col in [
+        "age",
+        "satisfaction_score",
+        "loyalty_points",
+        "support_tickets_raised",
+        "churn_flag",
+        "referral_count",
+    ]:
+        if col in data.columns:
+            data[col] = pd.to_numeric(data[col], errors="coerce")
 
     if "last_purchase_date" in data.columns:
         data["last_purchase_date"] = _parse_dates(data["last_purchase_date"])
 
     if "days_since_last_purchase" not in data.columns:
         data["days_since_last_purchase"] = np.nan
+    else:
+        data["days_since_last_purchase"] = pd.to_numeric(
+            data["days_since_last_purchase"], errors="coerce"
+        )
 
     today = pd.Timestamp.today().normalize()
     if "last_purchase_date" in data.columns:
@@ -307,7 +326,7 @@ def _load_synthetic_data() -> pd.DataFrame:
     df = pd.read_csv(DATA_PATH)
     df["signup_date"] = pd.to_datetime(df.get("signup_date"), errors="coerce")
     df["last_purchase_date"] = pd.to_datetime(df.get("last_purchase_date"), errors="coerce")
-    return df
+    return enrich_dataframe(df)
 
 
 def render_data_source_banner() -> None:
@@ -363,7 +382,7 @@ def get_active_dataset() -> pd.DataFrame:
 
     st.session_state.setdefault("data_source", "synthetic")
     df = _load_synthetic_data()
-    return enrich_dataframe(df)
+    return df
 
 
 def _base_demo_frame(n_customers: int, seed: int) -> pd.DataFrame:

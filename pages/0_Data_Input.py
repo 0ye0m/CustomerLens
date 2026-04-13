@@ -43,10 +43,10 @@ def _reset_mapping(columns: List[str]) -> None:
 def _mapping_status(selected: str, detected: str | None) -> str:
     """Return status HTML for the mapping selection."""
     if selected == SKIP_OPTION:
-        return "<span style='color: #9AA4B2;'>skipped</span>"
+        return "<span style='color: #9AA4B2;'>&#x2014; skipped</span>"
     if detected and selected == detected:
-        return "<span style='color: #2ECC71;'>matched</span>"
-    return "<span style='color: #F5B041;'>needs review</span>"
+        return "<span style='color: #2ECC71;'>&#x2705; matched</span>"
+    return "<span style='color: #F5B041;'>&#x2753; needs review</span>"
 
 
 def _mapping_ui(df: pd.DataFrame) -> Dict[str, str]:
@@ -73,7 +73,7 @@ def _mapping_ui(df: pd.DataFrame) -> Dict[str, str]:
             st.session_state[f"map_{col}"] = default_value
 
         selected = row_cols[1].selectbox(
-            "",
+            f"Map {col}",
             options=options,
             key=f"map_{col}",
             label_visibility="collapsed",
@@ -123,6 +123,10 @@ def tab_upload() -> None:
         else:
             df = pd.read_excel(uploaded)
 
+    if df.shape[1] == 0:
+        st.error("The uploaded file has no columns. Please upload a valid dataset.")
+        return
+
     if df.empty:
         st.error("The uploaded file has no rows. Please upload a file with data.")
         return
@@ -130,6 +134,7 @@ def tab_upload() -> None:
     if st.session_state.get("uploaded_file_name") != uploaded.name:
         st.session_state.pop("mapped_df", None)
         st.session_state.pop("mapping_validation", None)
+        st.session_state.pop("upload_loaded", None)
         st.session_state["uploaded_file_name"] = uploaded.name
 
     st.session_state["uploaded_df"] = df
@@ -182,9 +187,12 @@ def tab_upload() -> None:
             enriched = enrich_dataframe(mapped_df)
             st.session_state["user_data"] = enriched
             st.session_state["data_source"] = "uploaded"
+            st.session_state["upload_loaded"] = True
             st.success(
                 "Your data is loaded. All analysis pages are now using your data."
             )
+
+        if st.session_state.get("upload_loaded"):
             if st.button("Go to Overview"):
                 st.switch_page("pages/1_Overview.py")
 
@@ -280,7 +288,10 @@ def tab_manual_entry() -> None:
         enriched = enrich_dataframe(trimmed)
         st.session_state["user_data"] = enriched
         st.session_state["data_source"] = "uploaded"
+        st.session_state["manual_loaded"] = True
         st.success("Your customers are loaded. All analysis pages are now using your data.")
+
+    if st.session_state.get("manual_loaded"):
         if st.button("Go to Overview"):
             st.switch_page("pages/1_Overview.py")
 
@@ -303,7 +314,8 @@ def _demo_card(title: str, subtitle: str, button_label: str) -> None:
         """,
         unsafe_allow_html=True,
     )
-    if st.button(button_label, type="primary"):
+    key_suffix = "".join(ch.lower() for ch in title if ch.isalnum())
+    if st.button(button_label, type="primary", key=f"load_demo_{key_suffix}"):
         if "E-commerce" in title:
             demo_df = build_demo_dataset("ecommerce")
             st.session_state["data_source"] = "demo_ecommerce"
@@ -315,9 +327,8 @@ def _demo_card(title: str, subtitle: str, button_label: str) -> None:
             st.session_state["data_source"] = "demo_retail"
 
         st.session_state["user_data"] = demo_df
+        st.session_state["demo_loaded"] = True
         st.success("Demo data loaded. You can start exploring now.")
-        if st.button("Start Exploring"):
-            st.switch_page("pages/1_Overview.py")
 
 
 def tab_demo_data() -> None:
@@ -344,6 +355,10 @@ def tab_demo_data() -> None:
             "3,000 customers, in-store + online, loyalty program, regional spread.",
             "Load Retail Demo",
         )
+
+    if st.session_state.get("demo_loaded"):
+        if st.button("Start Exploring", key="start_demo_explore"):
+            st.switch_page("pages/1_Overview.py")
 
 
 def render_page() -> None:

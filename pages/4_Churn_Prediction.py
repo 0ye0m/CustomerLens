@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
+from modules.data_manager import get_active_dataset, render_data_source_banner
 from utils.groq_client import ask_groq
 from utils.helpers import (
     apply_filters,
@@ -22,7 +23,6 @@ from utils.helpers import (
     compute_clustering,
     compute_rfm,
     empty_state,
-    load_data,
     render_kpi_row,
     sidebar_filters,
 )
@@ -45,7 +45,7 @@ def configure_page() -> None:
 def prepare_data() -> Dict[str, object]:
     """Load data and train the churn model."""
     with st.spinner("Loading customer data..."):
-        base_df = load_data()
+        base_df = get_active_dataset()
     with st.spinner("Computing RFM segments..."):
         rfm_df = compute_rfm(base_df)
     with st.spinner("Running clustering analysis..."):
@@ -157,6 +157,7 @@ def render_page() -> None:
 
     st.title("Churn Prediction")
     st.caption("Predict churn risk and simulate retention interventions.")
+    render_data_source_banner()
 
     data_bundle = prepare_data()
     full_df = data_bundle["df"]

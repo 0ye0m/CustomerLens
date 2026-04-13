@@ -11,6 +11,7 @@ from fpdf import FPDF
 
 from data.generate_data import generate_dataset
 from modules import churn_model, clv_model, clustering, dimensionality, recommender, rfm_analysis
+from modules.data_manager import render_data_source_widget
 from utils.groq_client import render_groq_sidebar
 
 
@@ -85,6 +86,7 @@ def compute_recommendations(df: pd.DataFrame) -> pd.DataFrame:
 def render_sidebar_nav() -> None:
     """Render sidebar navigation links for the multipage app."""
     nav_items = [
+        ("pages/0_Data_Input.py", "Your Data"),
         ("app.py", "Home"),
         ("pages/1_Overview.py", "Overview"),
         ("pages/2_RFM_Analysis.py", "RFM Analysis"),
@@ -112,21 +114,27 @@ def sidebar_filters(df: pd.DataFrame, cluster_options: Iterable[int] | None = No
     render_sidebar_nav()
     st.sidebar.markdown("---")
 
-    min_date = df["signup_date"].min()
-    max_date = df["signup_date"].max()
+    date_col = "signup_date" if "signup_date" in df.columns else "last_purchase_date"
+    min_date = df[date_col].min()
+    max_date = df[date_col].max()
+    date_label = "Signup date range" if date_col == "signup_date" else "Purchase date range"
     date_range = st.sidebar.date_input(
-        "Signup date range",
+        date_label,
         value=(min_date, max_date),
         min_value=min_date,
         max_value=max_date,
     )
 
-    available_countries = sorted(df["country"].dropna().unique().tolist())
-    selected_countries = st.sidebar.multiselect(
-        "Country",
-        options=available_countries,
-        default=available_countries,
-    )
+    if "country" in df.columns:
+        available_countries = sorted(df["country"].dropna().unique().tolist())
+        selected_countries = st.sidebar.multiselect(
+            "Country",
+            options=available_countries,
+            default=available_countries,
+        )
+    else:
+        st.sidebar.info("Country filter unavailable for this dataset.")
+        selected_countries = []
 
     cluster_list = sorted(set(cluster_options or []))
     if cluster_list:
@@ -139,6 +147,8 @@ def sidebar_filters(df: pd.DataFrame, cluster_options: Iterable[int] | None = No
         st.sidebar.info("No clusters available for the current view.")
         selected_clusters = []
 
+    st.sidebar.markdown("---")
+    render_data_source_widget()
     st.sidebar.markdown("---")
     render_groq_sidebar()
 
@@ -153,11 +163,12 @@ def sidebar_filters(df: pd.DataFrame, cluster_options: Iterable[int] | None = No
 def apply_filters(df: pd.DataFrame, filters: FilterState) -> pd.DataFrame:
     """Filter the dataset based on sidebar selections."""
     filtered = df.copy()
+    date_col = "signup_date" if "signup_date" in filtered.columns else "last_purchase_date"
     filtered = filtered[
-        (filtered["signup_date"] >= filters.date_range[0]) & (filtered["signup_date"] <= filters.date_range[1])
+        (filtered[date_col] >= filters.date_range[0]) & (filtered[date_col] <= filters.date_range[1])
     ]
 
-    if filters.countries:
+    if filters.countries and "country" in filtered.columns:
         filtered = filtered[filtered["country"].isin(filters.countries)]
 
     if filters.clusters:

@@ -21,6 +21,7 @@ from utils.helpers import (
     apply_filters,
     compute_churn,
     compute_clustering,
+    compute_clv,
     compute_rfm,
     empty_state,
     render_kpi_row,
@@ -50,8 +51,10 @@ def prepare_data() -> Dict[str, object]:
         rfm_df = compute_rfm(base_df)
     with st.spinner("Running clustering analysis..."):
         cluster_result = compute_clustering(rfm_df)
+    with st.spinner("Forecasting CLV..."):
+        clv_result = compute_clv(cluster_result["df"])
     with st.spinner("Training churn model..."):
-        churn_result = compute_churn(cluster_result["df"])
+        churn_result = compute_churn(clv_result["df"])
 
     return {"df": churn_result["df"].copy(), "churn_result": churn_result}
 

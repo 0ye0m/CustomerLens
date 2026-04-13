@@ -236,6 +236,11 @@ def generate_strategy_pdf(
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=16)
     pdf.add_page()
+    page_width = pdf.w - pdf.l_margin - pdf.r_margin
+
+    def safe_text(value: Any) -> str:
+        text = "" if value is None else str(value)
+        return " ".join(text.replace("\r", " ").splitlines()).strip()
 
     pdf.set_font("Helvetica", style="B", size=16)
     pdf.cell(0, 10, "CustomerLens Strategy Report", ln=True)
@@ -249,10 +254,14 @@ def generate_strategy_pdf(
     pdf.cell(0, 8, "Recommended Actions", ln=True)
 
     pdf.set_font("Helvetica", size=11)
-    pdf.multi_cell(0, 6, f"Channel: {strategy['channel']}")
-    pdf.multi_cell(0, 6, f"Offer: {strategy['offer']}")
-    pdf.multi_cell(0, 6, f"Tone: {strategy['tone']}")
-    pdf.multi_cell(0, 6, f"Expected Response Rate: {strategy['response_rate']}")
+    pdf.set_x(pdf.l_margin)
+    pdf.multi_cell(page_width, 6, f"Channel: {safe_text(strategy.get('channel'))}")
+    pdf.set_x(pdf.l_margin)
+    pdf.multi_cell(page_width, 6, f"Offer: {safe_text(strategy.get('offer'))}")
+    pdf.set_x(pdf.l_margin)
+    pdf.multi_cell(page_width, 6, f"Tone: {safe_text(strategy.get('tone'))}")
+    pdf.set_x(pdf.l_margin)
+    pdf.multi_cell(page_width, 6, f"Expected Response Rate: {safe_text(strategy.get('response_rate'))}")
 
     pdf.ln(4)
     pdf.set_font("Helvetica", style="B", size=12)
@@ -260,6 +269,11 @@ def generate_strategy_pdf(
 
     pdf.set_font("Helvetica", size=10)
     for _, row in allocation.iterrows():
-        pdf.cell(0, 6, f"Cluster {row['cluster_id']}: {row['allocation_pct']:.1f}%", ln=True)
+        pdf.cell(
+            0,
+            6,
+            f"Cluster {safe_text(row['cluster_id'])}: {row['allocation_pct']:.1f}%",
+            ln=True,
+        )
 
     return pdf.output(dest="S").encode("latin-1")
